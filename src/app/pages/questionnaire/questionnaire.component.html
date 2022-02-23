@@ -1,0 +1,293 @@
+<header>
+  <div class="container-xl">
+    <div class="row justify-content-between">
+      <a class="navbar-brand" (click)="false">
+        <img src="assets/images/HandPaintingFramework.png" alt="">
+      </a>
+    </div>
+    <div class="row justify-content-center">
+      <!--<div class="progress">
+        <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="5" aria-valuemax="100"
+             style="width: 50%"></div>
+      </div>-->
+      <progressbar [value]="progress"></progressbar>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="container-xl">
+    <div class="row">
+      <div class="col">
+        <ng-container *ngIf="!isShowFinalResponse">
+          <div class="form-wrapper">
+            <form [formGroup]="questionnaireFormGroup" (ngSubmit)="onSubmit()">
+              <tabset #questionnaireTabSet [justified]="true">
+                <tab *ngFor="let tab of tabs; let i = index" [active]="tab.active" (selectTab)="onTabChange(i)"
+                     (deselect)="tab.active = false" [disabled]="!isFormDone(tab.id)" [removable]="tab.removable"
+                     [customClass]="tab.customClass">
+                  <ng-template tabHeading>
+                    <img src="assets/images/svg/check-mark.svg" alt="check-mark"
+                         *ngIf="isFormDone(tab.id)">
+                    <i><b>{{tab?.title}}</b></i>
+                  </ng-template>
+                  <div class="content-box">
+                    <div class="form-steps">
+                      <div class="step">
+                        <div class="container-fluid">
+                          <div class="row">
+                            <div class="col-12">
+                              <canvas #bodyPartsCanvas width="800" height="640"
+                                      style="background-image: url(assets/images/body-image.png); background-repeat: no-repeat; background-position: left center;
+  background-size: contain;" (click)="onCanvasClick($event)">
+                              </canvas>
+                            </div>
+                            <div class="col-12">
+                              <label class="form-check-label" for="flexCheckDefault">
+                                Mark here if you don't have any pain:
+                              </label>
+                              <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            </div>
+                            <div class="col-12">
+                              <button type="button" class="btn btn-outline-danger" (click)="clearCanvas()">Remove All
+                                X's
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <ng-container *ngFor="let section of questionnaire?.sections">
+                          <div formGroupName="{{section.id}}" *ngIf="section.id === currentActiveSectionId">
+
+                            <div class="q-box__question" *ngFor="let field of section.fields"
+                                 [class.d-block]="field.answer_type === 'radio' || field.answer_type === 'checkbox'">
+
+                              <!--START: Separator-->
+                              <ng-container *ngIf="field.answer_type === 'separator'">
+                                <div class="seperator">
+                                  <span>SECTION BREAK</span>
+                                  <div></div>
+                                </div>
+                              </ng-container>
+                              <!--END: Separator-->
+
+                              <!--START: Text Type-->
+                              <ng-container *ngIf="field.answer_type === 'text'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <input class="question__input" type="text" formControlName="{{field.id}}"
+                                       placeholder="Please Enter {{field.name}}">
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Text Type-->
+
+                              <!--START: Date Type-->
+                              <ng-container *ngIf="
+                              field.answer_type === 'date'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <input type="text" placeholder="Please Enter {{field.name}}"
+                                       formControlName="{{field.id}}" class="question__input" onkeydown="return false"
+                                       bsDatepicker [bsConfig]="{ isAnimated: true, adaptivePosition: true }">
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Date Type-->
+
+                              <!--START: Email Type-->
+                              <ng-container *ngIf="field.answer_type === 'email'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <input placeholder="Please Enter {{field.name}}" class="question__input" type="email"
+                                       formControlName="{{field.id}}">
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Email Type-->
+
+                              <!--START: Phone Type-->
+                              <ng-container *ngIf="field.answer_type === 'phone'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <input placeholder="Please Enter {{field.name}}" class="question__input" type="text"
+                                       mask="(000) 000-0000" formControlName="{{field.id}}">
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Phone Type-->
+
+                              <!--START: Number Type-->
+                              <ng-container *ngIf="field.answer_type === 'number'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <input placeholder="Please Enter {{field.name}}" class="question__input" type="number"
+                                       formControlName="{{field.id}}">
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Number Type-->
+
+                              <!--START: Radio Type-->
+                              <ng-container *ngIf="field.answer_type === 'radios'">
+                                <label class="d-block pb-2">{{field.name}}</label>
+                                <div class="form-check form-check-inline" *ngFor="let option of field.options">
+                                  <input class="form-check-input question__input" type="radio"
+                                         formControlName="{{field.id}}"
+                                         value="{{option.id}}">
+                                  <label class="form-check-label question__label">{{option.name}}</label>
+                                </div>
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Radio Type-->
+
+                              <!--START: Checkbox Type-->
+                              <ng-container *ngIf="field.answer_type === 'checkbox'">
+                                <label class="d-block pb-2">{{field.name}}</label>
+                                <div class="form-check form-check-inline" *ngFor="let option of field.options">
+                                  <input class="form-check-input" type="checkbox" formControlName="{{field.id}}"
+                                         value="{{option.id}}">
+                                  <label class="form-check-label">{{option.name}}</label>
+                                </div>
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Checkbox Type-->
+
+                              <!--START: File Type-->
+                              <ng-container *ngIf="field.answer_type === 'file'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <!--<input placeholder="Please Enter {{field.name}}" class="question__input" type="file"
+                                       formControlName="{{field.name}}">-->
+
+                                <p-fileUpload mode="basic"
+                                              name="{{field.id}}"
+                                              chooseIcon="pi pi-upload"
+                                              [customUpload]="true"
+                                              styleClass="p-button-text p-button-plain"
+                                              (onSelect)="mapToController($event, field.id.toString())">
+                                </p-fileUpload>
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.id.toString())">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: File Type-->
+
+                              <!--START: Select Type-->
+                              <ng-container *ngIf="field.answer_type === 'select'">
+                                <label class="form-check-label question__label">{{field.name}}</label>
+                                <select class="question__input" formControlName="{{field.name}}">
+                                  <option value="null">Select an option</option>
+                                  <option *ngFor="let option of field.options" [value]="option.id">{{option.name}}
+                                  </option>
+                                </select>
+                                <button mat-icon-button type="button">
+                                  <svg class="bi" role="img" aria-label="Tools">
+                                    <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                  </svg>
+                                </button>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.name)">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: Select Type-->
+
+                              <!--START: TextArea Type-->
+                              <ng-container *ngIf="field.answer_type === 'textarea'">
+                                <div class="block-question">
+                                  <label class="form-check-label question__label">{{field.name}}</label>
+                                  <textarea placeholder="Please Enter {{field.name}}" class="question__input"
+                                            formControlName="{{field.name}}" rows="5"></textarea>
+                                  <button mat-icon-button type="button">
+                                    <svg class="bi" role="img" aria-label="Tools">
+                                      <use xlink:href="assets/images/svg/bootstrap-icons.svg#trash"/>
+                                    </svg>
+                                  </button>
+                                </div>
+                                <div class="invalid-feedback" [class.d-block]="hasErrors(field.name)">
+                                  Invalid/Empty value
+                                </div>
+                              </ng-container>
+                              <!--END: TextArea Type-->
+
+                              <!--START: Body Parts Type-->
+                              <ng-container *ngIf="field.answer_type === 'bodyParts'">
+                                <canvas #bodyPartsCanvas width="800" height="640"
+                                        style="background-image: url(assets/images/body-image.png); background-repeat: no-repeat; background-position: left center;
+  background-size: contain;" (click)="onCanvasClick($event)">
+                                </canvas>
+                              </ng-container>
+                              <!--END: Body Parts Type-->
+                            </div>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </div>
+                    <div class="form-buttons">
+                      <div class="middle">
+                        <button type="button" class="btn btn-success me-3" [disabled]="currentTabIndex === 0"
+                                (click)="onMoveToPreviousTab()">BACK
+                        </button>
+                        <button type="button" class="btn btn-success ms-3" *ngIf="currentTabIndex < (tabs!.length -1)"
+                                (click)="onMoveToNextTab()">
+                          NEXT
+                        </button>
+                      </div>
+                      <button type="submit" class="btn btn-danger text-light"
+                              *ngIf="currentTabIndex === (tabs!.length -1)">SUBMIT
+                      </button>
+                    </div>
+                  </div>
+                </tab>
+              </tabset>
+            </form>
+          </div>
+        </ng-container>
+        <ng-template #showResponseMessageContainer>
+          Thank you for submitting the form.
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</main>
